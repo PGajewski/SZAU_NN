@@ -68,7 +68,8 @@ for k=1:2
             u_vector(1,j) = u(i,2);
             x_vector(1,j+1) = -alfa1 * x_vector(1,j) + x_vector(2,j) + beta1*g1(u_vector(1,j-u_delay));
             x_vector(2,j+1) = -alfa2 * x_vector(1,j) + beta2*g1(u_vector(1,j-u_delay));
-            y_vector(1,j) = g2(x_vector(1,j));
+            %y_vector(1,j) = g2(x_vector(1,j)); %without noise
+            y_vector(1,j) = g2(x_vector(1,j)) + 0.02*(rand(1,1)-0.5); % with noise
         end
     end
 
@@ -108,8 +109,7 @@ y = zeros(1,15);
 for k = 6:15
     x1(k) = -alfa1*x1(k-1) + x2(k-1) + beta1*g1(u(k-5));
     x2(k) = -alfa2*x1(k-1) + beta2*g1(u(k-5));
-    %y(k) = g2(x1(k)); % without noise
-    y(k) = g2(x1(k)) + 0.06*(rand(1,1)-0.5);
+    y(k) = g2(x1(k));
 end
 figure(4);
 subplot(2,1,1);
