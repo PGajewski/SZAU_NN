@@ -124,8 +124,16 @@ xlabel('k');
 ylabel('u');
 
 %% Validate object.
+sim_type = 'OE'; % ARMAX OE
 % Read config.
-[tau, nb, na, K, max_iter, error, alghorithm] = readConfig();
+[tau, nb, na, K, max_iter, error, algorithm] = readConfig();
+
+%Compare model type and chosen simulation type.
+if strcmp(sim_type,'OE') &&  (algorithm==1)
+    warning('Chosen EO simulation, but model is ARMAX');
+elseif strcmp(sim_type,'ARMAX') &&  (algorithm==2)
+    warning('Chosen ARMAX simulation, but model is OE');
+end
 
 % Read data.
 [u_val, y_val] = readData('dane_wer.txt');
@@ -134,8 +142,9 @@ ylabel('u');
 save('tmp.mat');
 %Load model of network.
 model;
+load('tmp.mat');
+save('tmp.mat');
 
-%Display learning data.
 uczenie
 load('tmp.mat');
 delete('tmp.mat');
@@ -147,10 +156,12 @@ x_vector = zeros(2,length(u_val));
 %Init state
 x_vector(:,1) = [0;0];
     
-for i=(u_delay)+1:length(u_val)
-        x_vector(1,i+1) = -alfa1 * x_vector(1,i) + x_vector(2,i) + beta1*g1(u_val(1,i-u_delay));
-        x_vector(2,i+1) = -alfa2 * x_vector(1,i) + beta2*g1(u_val(1,i-u_delay));
-        y_vector(1,i) = g2(x_vector(1,i));
+for i=(nb)+1:length(u_val)
+    if strcmp(sim_type,'OE')
+        y_vector(1,i) = w20 + w2*tanh(w10 + w1*[flip(u_val(i-nb:i-tau)) flip(y_val(i-na:i-1))]');
+    elseif strcmp(sim_type,'ARMAX')
+        y_vector(1,i) = w20 + w2*tanh(w10 + w1*[flip(u_val(i-nb:i-tau)) flip(y_vector(i-na:i-1))]');
+    end
 end
 
 %Compare model for validating data.
@@ -164,6 +175,12 @@ title('Compare for validating data');
 legend('y_{val}','y_{model}','u');
 xlabel('t');
 ylabel('y,u');
+
+figure(7)
+plot(y_val,y_vector)
+title('Validating data into model results');
+xlabel('y_{val}');
+ylabel('y_{mod}');
 
 %Count MSE.
 err = immse(y_vector,y_val)
