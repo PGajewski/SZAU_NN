@@ -130,7 +130,7 @@ sim_type = 'OE'; % ARMAX OE
 
 %Compare model type and chosen simulation type.
 if strcmp(sim_type,'OE') &&  (algorithm==1)
-    warning('Chosen EO simulation, but model is ARMAX');
+    warning('Chosen OE simulation, but model is ARMAX');
 elseif strcmp(sim_type,'ARMAX') &&  (algorithm==2)
     warning('Chosen ARMAX simulation, but model is OE');
 end
@@ -181,8 +181,8 @@ xlabel('y_{val}');
 ylabel('y_{mod}');
 
 %Count MSE.
-err = immse(y_vector,y_val)
-
+%err = immse(y_vector,y_val)
+err =(y_vector-y_val)*(y_vector-y_val)'
 %% Prepare mean square linear model.
 %Construct M matrix.
 M = zeros(length(y_learning)-nb,nb-tau+na+2);
@@ -218,4 +218,5 @@ xlabel('y_{val}');
 ylabel('y_{mod}');
 
 %Count MSE.
-err = immse(y_vector_poly,y_val)
+%err = immse(y_vector_poly,y_val)
+err =(y_vector_poly-y_val)* (y_vector_poly-y_val)'
