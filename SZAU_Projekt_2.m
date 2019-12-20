@@ -1,5 +1,5 @@
 %%Data
-clear all;
+clear;
 close all;
 
 global alfa1;
@@ -26,6 +26,7 @@ g2 = @(x)(0.25*(1-exp(-2.5*x)));
 
 %% Static characteristic.
 u = u_min:0.01:u_max;
+y_stat = zeros(1, length(u));
 for i =1:length(u)
    y_stat(i) = StaticNonlinearObject(u(i)); 
 end
@@ -46,7 +47,6 @@ file_template = '%f %f\n';
 %k=2 - verifying data
 for k=1:2
     rng(seeds(k));
-    rng
     steps = 40;
     steps_length = 50;
     u = [(u_delay+1), 0]; %Init signal.
@@ -123,66 +123,418 @@ title('Prezentacja opoznienia procesu - sterowanie');
 xlabel('k');
 ylabel('u');
 
-%% Validate object.
-sim_type = 'OE'; % ARMAX OE
-% Read config.
-[tau, nb, na, K, max_iter, error, algorithm] = readConfig();
 
-%Compare model type and chosen simulation type.
-if strcmp(sim_type,'OE') &&  (algorithm==1)
-    warning('Chosen OE simulation, but model is ARMAX');
-elseif strcmp(sim_type,'ARMAX') &&  (algorithm==2)
-    warning('Chosen ARMAX simulation, but model is OE');
-end
-
+save('beforemodels.mat'); % save data before models
+%% Best model OE and BFGS, simul OE
 % Read data.
 [u_val, y_val] = readData('dane_wer.txt');
 [u_learning, y_learning] = readData('dane.txt');
 
+nb = 6;
+na = 2;
+tau = 5;
+
 save('tmp.mat');
 %Load model of network.
-model;
+run('MODELOEBFGS/NajlepszyK=4model=7/model.m');
 load('tmp.mat');
 save('tmp.mat');
 
-uczenie
+run('MODELOEBFGS/NajlepszyK=4model=7/uczenie.m');
 load('tmp.mat');
 delete('tmp.mat');
+
+%Count response of network for learning data.
+y_vector = zeros(1,length(u_val));
+y_vector(1:nb) = y_learning(1:nb);
+
+for i=(nb)+1:length(u_val)
+    y_vector(1,i) = w20 + w2*tanh(w10 + w1*[flip(u_learning(i-nb:i-tau)) flip(y_vector(i-na:i-1))]');
+end
+
+%Compare model for learning data.
+figure(6);
+hold on;
+plot(1:length(y_vector),y_vector);
+plot(1:length(y_learning),y_learning);
+plot(1:length(u_learning),u_learning);
+hold off;
+title('Symulacja OE modelu neuronowego dla danych ucz., tryb OE, algorytm BGFS');
+legend('y_{learning}','y_{model}','u');
+xlabel('t');
+ylabel('y,u');
+
+figure(7)
+h = scatter(y_learning,y_vector,0.1);
+h.Marker='.';
+title('Relacja OE wyjœcia procesu i modelu, dane ucz., tryb OE, algorytm BFGS');
+xlabel('y_{learning}');
+ylabel('y_{mod}');
 
 %Count response of network for validate data.
 y_vector = zeros(1,length(u_val));
 y_vector(1:nb) = y_val(1:nb);
 
 for i=(nb)+1:length(u_val)
-    if strcmp(sim_type,'OE')
-        y_vector(1,i) = w20 + w2*tanh(w10 + w1*[flip(u_val(i-nb:i-tau)) flip(y_vector(i-na:i-1))]');
-    elseif strcmp(sim_type,'ARMAX')
-        y_vector(1,i) = w20 + w2*tanh(w10 + w1*[flip(u_val(i-nb:i-tau)) flip(y_val(i-na:i-1))]');
-    end
+    y_vector(1,i) = w20 + w2*tanh(w10 + w1*[flip(u_val(i-nb:i-tau)) flip(y_vector(i-na:i-1))]');
 end
 
 %Compare model for validating data.
-figure(6);
+figure(8);
 hold on;
 plot(1:length(y_vector),y_vector);
 plot(1:length(y_val),y_val);
 plot(1:length(u_val),u_val);
 hold off;
-title('Compare for validating data');
+title('Symulacja OE modelu neuronowego dla danych wer., tryb OE, algorytm BFGS');
 legend('y_{val}','y_{model}','u');
 xlabel('t');
 ylabel('y,u');
 
-figure(7)
+figure(9);
 h = scatter(y_val,y_vector,0.1);
 h.Marker='.';
-title('Validating data into model results');
+title('Relacja OE wyjœcia procesu i modelu, dane wer., tryb OE, algorytm BFGS');
 xlabel('y_{val}');
 ylabel('y_{mod}');
 
-%Count MSE.
-%err = immse(y_vector,y_val)
-err =(y_vector-y_val)*(y_vector-y_val)'
+clear;
+load('beforemodels.mat');
+%% Best model OE and SD, simul OE
+% Read data.
+[u_val, y_val] = readData('dane_wer.txt');
+[u_learning, y_learning] = readData('dane.txt');
+
+nb = 6;
+na = 2;
+tau = 5;
+
+save('tmp.mat');
+%Load model of network.
+run('MODELOESD/Najlepszymodel=9/model.m');
+load('tmp.mat');
+save('tmp.mat');
+
+run('MODELOESD/Najlepszymodel=9/uczenie.m');
+load('tmp.mat');
+delete('tmp.mat');
+
+%Count response of network for learning data.
+y_vector = zeros(1,length(u_val));
+y_vector(1:nb) = y_learning(1:nb);
+
+for i=(nb)+1:length(u_val)
+    y_vector(1,i) = w20 + w2*tanh(w10 + w1*[flip(u_learning(i-nb:i-tau)) flip(y_vector(i-na:i-1))]');
+end
+
+%Compare model for learning data.
+figure(10);
+hold on;
+plot(1:length(y_vector),y_vector);
+plot(1:length(y_learning),y_learning);
+plot(1:length(u_learning),u_learning);
+hold off;
+title('Symulacja OE modelu neuronowego dla danych ucz., tryb OE, algorytm SD');
+legend('y_{learning}','y_{model}','u');
+xlabel('t');
+ylabel('y,u');
+
+figure(11);
+h = scatter(y_learning,y_vector,0.1);
+h.Marker='.';
+title('Relacja OE wyjœcia procesu i modelu, dane ucz., tryb OE, algorytm SD');
+xlabel('y_{learning}');
+ylabel('y_{mod}');
+
+%Count response of network for validate data.
+y_vector = zeros(1,length(u_val));
+y_vector(1:nb) = y_val(1:nb);
+
+for i=(nb)+1:length(u_val)
+    y_vector(1,i) = w20 + w2*tanh(w10 + w1*[flip(u_val(i-nb:i-tau)) flip(y_vector(i-na:i-1))]');
+end
+
+%Compare model for validating data.
+figure(12);
+hold on;
+plot(1:length(y_vector),y_vector);
+plot(1:length(y_val),y_val);
+plot(1:length(u_val),u_val);
+hold off;
+title('Symulacja OE modelu neuronowego dla danych wer., tryb OE, algorytm SD');
+legend('y_{val}','y_{model}','u');
+xlabel('t');
+ylabel('y,u');
+
+figure(13);
+h = scatter(y_val,y_vector,0.1);
+h.Marker='.';
+title('Relacja OE wyjœcia procesu i modelu, dane wer., tryb OE, algorytm SD');
+xlabel('y_{val}');
+ylabel('y_{mod}');
+
+clear;
+load('beforemodels.mat');
+%% Best model ARX and BFGS, simul ARX
+% Read data.
+[u_val, y_val] = readData('dane_wer.txt');
+[u_learning, y_learning] = readData('dane.txt');
+
+nb = 6;
+na = 2;
+tau = 5;
+
+save('tmp.mat');
+%Load model of network.
+run('MODELARXBFGS/Najlepszymodel=1/model.m');
+load('tmp.mat');
+save('tmp.mat');
+
+run('MODELARXBFGS/Najlepszymodel=1/uczenie.m');
+load('tmp.mat');
+delete('tmp.mat');
+
+%Count response of network for learning data.
+y_vector = zeros(1,length(u_val));
+y_vector(1:nb) = y_learning(1:nb);
+
+for i=(nb)+1:length(u_val)
+    y_vector(1,i) = w20 + w2*tanh(w10 + w1*[flip(u_learning(i-nb:i-tau)) flip(y_learning(i-na:i-1))]');
+end
+
+%Compare model for learning data.
+figure(14);
+hold on;
+plot(1:length(y_vector),y_vector);
+plot(1:length(y_learning),y_learning);
+plot(1:length(u_learning),u_learning);
+hold off;
+title('Symulacja ARX modelu neuronowego dla danych ucz., tryb ARX, algorytm BGFS');
+legend('y_{learning}','y_{model}','u');
+xlabel('t');
+ylabel('y,u');
+
+figure(15);
+h = scatter(y_learning,y_vector,0.1);
+h.Marker='.';
+title('Relacja ARX wyjœcia procesu i modelu, dane ucz., tryb ARX, algorytm BFGS');
+xlabel('y_{learning}');
+ylabel('y_{mod}');
+
+%Count response of network for validate data.
+y_vector = zeros(1,length(u_val));
+y_vector(1:nb) = y_val(1:nb);
+
+for i=(nb)+1:length(u_val)
+    y_vector(1,i) = w20 + w2*tanh(w10 + w1*[flip(u_val(i-nb:i-tau)) flip(y_val(i-na:i-1))]');
+end
+
+%Compare model for validating data.
+figure(16);
+hold on;
+plot(1:length(y_vector),y_vector);
+plot(1:length(y_val),y_val);
+plot(1:length(u_val),u_val);
+hold off;
+title('Symulacja ARX modelu neuronowego dla danych wer., tryb ARX, algorytm BFGS');
+legend('y_{val}','y_{model}','u');
+xlabel('t');
+ylabel('y,u');
+
+figure(17);
+h = scatter(y_val,y_vector,0.1);
+h.Marker='.';
+title('Relacja ARX wyjœcia procesu i modelu, dane wer.,tryb ARX, algorytm BFGS');
+xlabel('y_{val}');
+ylabel('y_{mod}');
+
+clear;
+load('beforemodels.mat');
+%% Best model OE and BFGS, simul OE
+% Read data.
+[u_val, y_val] = readData('dane_wer.txt');
+[u_learning, y_learning] = readData('dane.txt');
+
+nb = 6;
+na = 2;
+tau = 5;
+
+save('tmp.mat');
+%Load model of network.
+run('MODELARXBFGS/Najlepszymodel=1/model.m');
+load('tmp.mat');
+save('tmp.mat');
+
+run('MODELARXBFGS/Najlepszymodel=1/uczenie.m');
+load('tmp.mat');
+delete('tmp.mat');
+
+%Count response of network for learning data.
+y_vector = zeros(1,length(u_val));
+y_vector(1:nb) = y_learning(1:nb);
+
+for i=(nb)+1:length(u_val)
+    y_vector(1,i) = w20 + w2*tanh(w10 + w1*[flip(u_learning(i-nb:i-tau)) flip(y_vector(i-na:i-1))]');
+end
+
+%Compare model for learning data.
+figure(18);
+hold on;
+plot(1:length(y_vector),y_vector);
+plot(1:length(y_learning),y_learning);
+plot(1:length(u_learning),u_learning);
+hold off;
+title('Symulacja OE modelu neuronowego dla danych ucz., tryb ARX, algorytm BGFS');
+legend('y_{learning}','y_{model}','u');
+xlabel('t');
+ylabel('y,u');
+
+figure(19);
+h = scatter(y_learning,y_vector,0.1);
+h.Marker='.';
+title('Relacja OE wyjœcia procesu i modelu, dane ucz., tryb ARX, algorytm BFGS');
+xlabel('y_{learning}');
+ylabel('y_{mod}');
+
+%Count response of network for validate data.
+y_vector = zeros(1,length(u_val));
+y_vector(1:nb) = y_val(1:nb);
+
+for i=(nb)+1:length(u_val)
+    y_vector(1,i) = w20 + w2*tanh(w10 + w1*[flip(u_val(i-nb:i-tau)) flip(y_vector(i-na:i-1))]');
+end
+
+%Compare model for validating data.
+figure(20);
+hold on;
+plot(1:length(y_vector),y_vector);
+plot(1:length(y_val),y_val);
+plot(1:length(u_val),u_val);
+hold off;
+title('Symulacja OE modelu neuronowego dla danych wer., tryb ARX, algorytm BFGS');
+legend('y_{val}','y_{model}','u');
+xlabel('t');
+ylabel('y,u');
+
+figure(21);
+h = scatter(y_val,y_vector,0.1);
+h.Marker='.';
+title('Relacja OE wyjœcia procesu i modelu, dane wer., tryb ARX, algorytm BFGS');
+xlabel('y_{val}');
+ylabel('y_{mod}');
+
+% %% Validate object
+% sim_type = 'OE'; % ARMAX OE
+% % Read config.
+% [tau, nb, na, K, max_iter, error, algorithm] = readConfig();
+% 
+% %Compare model type and chosen simulation type.
+% if strcmp(sim_type,'OE') &&  (algorithm==1)
+%     warning('Chosen OE simulation, but model is ARMAX');
+% elseif strcmp(sim_type,'ARX') &&  (algorithm==2)
+%     warning('Chosen ARMAX simulation, but model is OE');
+% end
+% 
+% % Read data.
+% [u_val, y_val] = readData('dane_wer.txt');
+% [u_learning, y_learning] = readData('dane.txt');
+% 
+% save('tmp.mat');
+% %Load model of network.
+% model;
+% load('tmp.mat');
+% save('tmp.mat');
+% 
+% uczenie
+% load('tmp.mat');
+% delete('tmp.mat');
+% 
+% %Count response of network for learning data.
+% y_vector = zeros(1,length(u_val));
+% y_vector(1:nb) = y_learning(1:nb);
+% 
+% for i=(nb)+1:length(u_val)
+%     if strcmp(sim_type,'OE')
+%         y_vector(1,i) = w20 + w2*tanh(w10 + w1*[flip(u_learning(i-nb:i-tau)) flip(y_vector(i-na:i-1))]');
+%     elseif strcmp(sim_type,'ARX')
+%         y_vector(1,i) = w20 + w2*tanh(w10 + w1*[flip(u_learning(i-nb:i-tau)) flip(y_learning(i-na:i-1))]');
+%     end
+% end
+% 
+% %Compare model for learning data.
+% figure(6);
+% hold on;
+% plot(1:length(y_vector),y_vector);
+% plot(1:length(y_learning),y_learning);
+% plot(1:length(u_learning),u_learning);
+% hold off;
+% if strcmp(sim_type,'OE')
+%     title('Symulacja modelu neuronowego dla danych ucz¹cych w trybie OE');
+% end
+% if strcmp(sim_type,'ARX')
+%     title('Symulacja modelu neuronowego dla danych ucz¹cych w trybie ARX');
+% end
+% legend('y_{learning}','y_{model}','u');
+% xlabel('t');
+% ylabel('y,u');
+% 
+% figure(7)
+% h = scatter(y_learning,y_vector,0.1);
+% h.Marker='.';
+% if strcmp(sim_type,'OE')
+%     title('Relacja wyjœcia procesu i wyjœciowego modelu, w trybie OE, dane ucz¹ce');
+% end
+% if strcmp(sim_type,'ARX')
+%     title('Relacja wyjœcia procesu i wyjœciowego modelu, w trybie ARX, dane ucz¹ce');
+% end
+% xlabel('y_{learning}');
+% ylabel('y_{mod}');
+% err =(y_vector-y_learning)*(y_vector-y_learning)';
+% 
+% %Count response of network for validate data.
+% y_vector = zeros(1,length(u_val));
+% y_vector(1:nb) = y_val(1:nb);
+% 
+% for i=(nb)+1:length(u_val)
+%     if strcmp(sim_type,'OE')
+%         y_vector(1,i) = w20 + w2*tanh(w10 + w1*[flip(u_val(i-nb:i-tau)) flip(y_vector(i-na:i-1))]');
+%     elseif strcmp(sim_type,'ARX')
+%         y_vector(1,i) = w20 + w2*tanh(w10 + w1*[flip(u_val(i-nb:i-tau)) flip(y_val(i-na:i-1))]');
+%     end
+% end
+% 
+% %Compare model for validating data.
+% figure(8);
+% hold on;
+% plot(1:length(y_vector),y_vector);
+% plot(1:length(y_val),y_val);
+% plot(1:length(u_val),u_val);
+% hold off;
+% if strcmp(sim_type,'OE')
+%     title('Symulacja modelu neuronowego dla danych weryfikuj¹cych, w trybie OE');
+% end
+% if strcmp(sim_type,'ARX')
+%     title('Symulacja modelu neuronowego dla danych weryfikuj¹cych, w trybie ARX');
+% end
+% legend('y_{val}','y_{model}','u');
+% xlabel('t');
+% ylabel('y,u');
+% 
+% figure(9)
+% h = scatter(y_val,y_vector,0.1);
+% h.Marker='.';
+% if strcmp(sim_type,'OE')
+%     title('Relacja wyjœcia procesu i wyjœciowego modelu, w trybie OE, dane weryfikuj¹ce');
+% end
+% if strcmp(sim_type,'ARX')
+%     title('Relacja wyjœcia procesu i wyjœciowego modelu, w trybie ARX, dane weryfikuj¹ce');
+% end
+% xlabel('y_{val}');
+% ylabel('y_{mod}');
+% 
+% %Count MSE.
+% %err = immse(y_vector,y_val)
+% err =(y_vector-y_val)*(y_vector-y_val)';
 %% Prepare mean square linear model.
 %Construct M matrix.
 M = zeros(length(y_learning)-nb,nb-tau+na+2);
@@ -199,7 +551,7 @@ for i=(nb)+1:length(u_val)
 end
 
 %Compare model for validating data.
-figure(8);
+figure(10);
 hold on;
 plot(1:length(y_vector_poly),y_vector_poly);
 plot(1:length(y_val),y_val);
@@ -210,7 +562,7 @@ legend('y_{val}','y_{model}','u');
 xlabel('t');
 ylabel('y,u');
 
-figure(9)
+figure(11)
 h = scatter(y_val,y_vector_poly,0.1);
 h.Marker='.';
 title('Validating data into model results');
@@ -219,4 +571,4 @@ ylabel('y_{mod}');
 
 %Count MSE.
 %err = immse(y_vector_poly,y_val)
-err =(y_vector_poly-y_val)* (y_vector_poly-y_val)'
+err =(y_vector_poly-y_val)* (y_vector_poly-y_val)';
