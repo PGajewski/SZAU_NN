@@ -54,8 +54,8 @@ n=48; farx(n+1)=2.431009e-001; foe(n+1)=4.572370e-001; krok(n+1)=2.343012e-001; 
 n=49; farx(n+1)=2.489338e-001; foe(n+1)=4.452977e-001; krok(n+1)=2.093785e-001; ng(n+1)=1.540039e+002;
 n=50; farx(n+1)=2.512801e-001; foe(n+1)=4.388388e-001; krok(n+1)=2.994154e-001; ng(n+1)=7.925206e+001;
 
-figure; semilogy(farx,'b'); hold on; semilogy(foe,'r'); xlabel('Iteracje'); ylabel('Earx, Eoe'); legend('Earx','Eoe'); title('Uczenie predyktora OE');
-figure; subplot(2,1,1); semilogy(krok); xlabel('Iteracje'); ylabel('Krok');
-subplot(2,1,2); semilogy(ng); xlabel('Iteracje'); ylabel('Norma gradientu');
-Earx=farx(n+1)
-Eoe=foe(n+1)
+figure; semilogy(farx,'b'); hold on; semilogy(foe,'r'); xlabel('Iteracje'); ylabel('Earx, Eoe'); legend('Earx','Eoe'); title('Najlepszy model, uczenie predyktora OE, algorytm BFGS');
+%figure; subplot(2,1,1); semilogy(krok); xlabel('Iteracje'); ylabel('Krok');
+%subplot(2,1,2); semilogy(ng); xlabel('Iteracje'); ylabel('Norma gradientu');
+Earx=farx(n+1);
+Eoe=foe(n+1);

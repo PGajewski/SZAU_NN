@@ -74,25 +74,25 @@ for k=1:2
     end
 
     %Display data.
-    figure(k+1);
-    subplot(2,1,1);
-    plot(1:length(y_vector),y_vector, 'r');
-    title(strcat(plot_texts{k}, ' - wyjœcie'));
-    xlabel('k');
-    ylabel('y');
-    subplot(2,1,2);
-    plot(1:length(u_vector),u_vector, 'b');
-    title(strcat(plot_texts{k}, ' - sterowanie'));
-    xlabel('k');
-    ylabel('u');
 %     figure(k+1);
-%     plot(1:length(y_vector),y_vector);
-%     hold on;
-%     title(plot_texts{k});
-%     plot(1:length(u_vector),u_vector);
+%     subplot(2,1,1);
+%     plot(1:length(y_vector),y_vector, 'r');
+%     title(strcat(plot_texts{k}, ' - wyjœcie'));
 %     xlabel('k');
-%     ylabel('y,u');
-%     legend('y','u');
+%     ylabel('y');
+%     subplot(2,1,2);
+%     plot(1:length(u_vector),u_vector, 'b');
+%     title(strcat(plot_texts{k}, ' - sterowanie'));
+%     xlabel('k');
+%     ylabel('u');
+    figure(k+1);
+    plot(1:length(y_vector),y_vector);
+    hold on;
+    title(plot_texts{k});
+    plot(1:length(u_vector),u_vector);
+    xlabel('k');
+    ylabel('y,u');
+    legend('y','u');
     
     %Save to file
     fileID = fopen(files{k},'w');
@@ -350,7 +350,7 @@ ylabel('y_{mod}');
 
 clear;
 load('beforemodels.mat');
-%% Best model OE and BFGS, simul OE
+%% Best model ARX and BFGS, simul OE
 % Read data.
 [u_val, y_val] = readData('dane_wer.txt');
 [u_learning, y_learning] = readData('dane.txt');
@@ -423,6 +423,9 @@ title('Relacja OE wyjœcia procesu i modelu, dane wer., tryb ARX, algorytm BFGS')
 xlabel('y_{val}');
 ylabel('y_{mod}');
 
+
+clear;
+load('beforemodels.mat');
 % %% Validate object
 % sim_type = 'OE'; % ARMAX OE
 % % Read config.
@@ -536,6 +539,15 @@ ylabel('y_{mod}');
 % %err = immse(y_vector,y_val)
 % err =(y_vector-y_val)*(y_vector-y_val)';
 %% Prepare mean square linear model.
+
+% Read data
+[u_val, y_val] = readData('dane_wer.txt');
+[u_learning, y_learning] = readData('dane.txt');
+
+nb = 6;
+na = 2;
+tau = 5;
+
 %Construct M matrix.
 M = zeros(length(y_learning)-nb,nb-tau+na+2);
 for i=(nb+1):length(y_learning)
@@ -545,30 +557,59 @@ end
 W =M\y_learning(nb+1:end)';
 
 y_vector_poly = zeros(1,length(u_val));
+y_vector_poly(1:nb) = y_learning(1:nb);
+for i=(nb)+1:length(u_val)
+    y_vector_poly(1,i) = W'*[1 flip(u_learning(i-nb:i-tau)) flip(y_vector_poly(i-na:i-1))]';
+end
+
+%Compare model for learning data.
+figure(22);
+hold on;
+plot(1:length(y_vector_poly),y_vector_poly);
+plot(1:length(y_learning),y_learning);
+plot(1:length(u_learning),u_learning);
+hold off;
+title('Symulacja modelu MNK dla danych ucz¹cych');
+legend('y_{learning}','y_{model}','u');
+xlabel('t');
+ylabel('y,u');
+
+figure(23);
+h = scatter(y_learning,y_vector_poly,0.1);
+h.Marker='.';
+title('Relacja modelu MNK dla danych ucz¹cych');
+xlabel('y_{learning}');
+ylabel('y_{mod}');
+
+
+y_vector_poly = zeros(1,length(u_val));
 y_vector_poly(1:nb) = y_val(1:nb);
 for i=(nb)+1:length(u_val)
     y_vector_poly(1,i) = W'*[1 flip(u_val(i-nb:i-tau)) flip(y_vector_poly(i-na:i-1))]';
 end
 
 %Compare model for validating data.
-figure(10);
+figure(24);
 hold on;
 plot(1:length(y_vector_poly),y_vector_poly);
 plot(1:length(y_val),y_val);
 plot(1:length(u_val),u_val);
 hold off;
-title('Compare for validating data');
+title('Symulacja modelu MNK dla danych weryfikuj¹cych');
 legend('y_{val}','y_{model}','u');
 xlabel('t');
 ylabel('y,u');
 
-figure(11)
+figure(25);
 h = scatter(y_val,y_vector_poly,0.1);
 h.Marker='.';
-title('Validating data into model results');
+title('Relacja modelu MNK dla danych weryfikuj¹cych');
 xlabel('y_{val}');
 ylabel('y_{mod}');
 
+clear;
+load('beforemodels.mat');
+
 %Count MSE.
 %err = immse(y_vector_poly,y_val)
-err =(y_vector_poly-y_val)* (y_vector_poly-y_val)';
+% err =(y_vector_poly-y_val)* (y_vector_poly-y_val)';

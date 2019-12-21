@@ -1,5 +1,5 @@
 %uczenie predyktora arx
-clear all;
+clear;
 n=0; farx(n+1)=2.227229e+002; foe(n+1)=2.243677e+002; wspucz(n+1)=0.000000e+000; ng(n+1)=0.000000e+000;
 %odnowa zmiennej metryki
 n=1; farx(n+1)=1.746708e+002; foe(n+1)=1.772905e+002; krok(n+1)=5.113081e-004; ng(n+1)=5.708252e+002;
@@ -54,8 +54,8 @@ n=48; farx(n+1)=2.060912e-001; foe(n+1)=1.177358e+000; krok(n+1)=7.847380e-001; 
 n=49; farx(n+1)=2.047722e-001; foe(n+1)=1.033666e+000; krok(n+1)=1.056270e+000; ng(n+1)=1.611857e+000;
 n=50; farx(n+1)=2.042553e-001; foe(n+1)=9.983194e-001; krok(n+1)=3.838379e-001; ng(n+1)=2.682634e+000;
 
-figure; semilogy(farx,'b'); hold on; semilogy(foe,'r'); xlabel('Iteracje'); ylabel('Earx, Eoe'); legend('Earx','Eoe'); title('Uczenie predyktora ARX');
-figure; subplot(2,1,1); semilogy(krok); xlabel('Iteracje'); ylabel('Krok');
-subplot(2,1,2); semilogy(ng); xlabel('Iteracje'); ylabel('Norma gradientu');
-Earx=farx(n+1)
-Eoe=foe(n+1)
+figure; semilogy(farx,'b'); hold on; semilogy(foe,'r'); xlabel('Iteracje'); ylabel('Earx, Eoe'); legend('Earx','Eoe'); title('Najlepszy model, uczenie predyktora ARX, algorytm BFGS');
+%figure; subplot(2,1,1); semilogy(krok); xlabel('Iteracje'); ylabel('Krok');
+%subplot(2,1,2); semilogy(ng); xlabel('Iteracje'); ylabel('Norma gradientu');
+Earx=farx(n+1);
+Eoe=foe(n+1);
