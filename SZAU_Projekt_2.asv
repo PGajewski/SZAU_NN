@@ -325,7 +325,7 @@ legend('y_{learning}','y_{model}','u');
 xlabel('t');
 ylabel('y,u');
 
-figure;
+figure(15);
 h = scatter(y_learning,y_vector,0.1);
 h.Marker='.';
 title('Relacja ARX wyjœcia procesu i modelu, dane ucz., tryb ARX, algorytm BFGS');
@@ -343,7 +343,7 @@ end
 %errValidating =(y_vector-y_val)*(y_vector-y_val)'
 
 %Compare model for validating data.
-figure;
+figure(16);
 hold on;
 plot(1:length(y_vector),y_vector);
 plot(1:length(y_val),y_val);
@@ -354,7 +354,7 @@ legend('y_{val}','y_{model}','u');
 xlabel('t');
 ylabel('y,u');
 
-figure;
+figure(17);
 h = scatter(y_val,y_vector,0.1);
 h.Marker='.';
 title('Relacja ARX wyjœcia procesu i modelu, dane wer.,tryb ARX, algorytm BFGS');
@@ -393,7 +393,7 @@ end
 %errLearning =(y_vector-y_learning)*(y_vector-y_learning)'
 
 %Compare model for learning data.
-figure;
+figure(18);
 hold on;
 plot(1:length(y_vector),y_vector);
 plot(1:length(y_learning),y_learning);
@@ -404,7 +404,7 @@ legend('y_{learning}','y_{model}','u');
 xlabel('t');
 ylabel('y,u');
 
-figure;
+figure(19);
 h = scatter(y_learning,y_vector,0.1);
 h.Marker='.';
 title('Relacja OE wyjœcia procesu i modelu, dane ucz., tryb ARX, algorytm BFGS');
@@ -422,7 +422,7 @@ end
 %errValidating =(y_vector-y_val)*(y_vector-y_val)'
 
 %Compare model for validating data.
-figure;
+figure(20);
 hold on;
 plot(1:length(y_vector),y_vector);
 plot(1:length(y_val),y_val);
@@ -433,7 +433,7 @@ legend('y_{val}','y_{model}','u');
 xlabel('t');
 ylabel('y,u');
 
-figure;
+figure(21);
 h = scatter(y_val,y_vector,0.1);
 h.Marker='.';
 title('Relacja OE wyjœcia procesu i modelu, dane wer., tryb ARX, algorytm BFGS');
@@ -482,7 +482,7 @@ load('beforemodels.mat');
 % end
 % 
 % %Compare model for learning data.
-% figure;
+% figure(6);
 % hold on;
 % plot(1:length(y_vector),y_vector);
 % plot(1:length(y_learning),y_learning);
@@ -498,7 +498,7 @@ load('beforemodels.mat');
 % xlabel('t');
 % ylabel('y,u');
 % 
-% figure;
+% figure(7)
 % h = scatter(y_learning,y_vector,0.1);
 % h.Marker='.';
 % if strcmp(sim_type,'OE')
@@ -524,7 +524,7 @@ load('beforemodels.mat');
 % end
 % 
 % %Compare model for validating data.
-% figure;
+% figure(8);
 % hold on;
 % plot(1:length(y_vector),y_vector);
 % plot(1:length(y_val),y_val);
@@ -540,7 +540,7 @@ load('beforemodels.mat');
 % xlabel('t');
 % ylabel('y,u');
 % 
-% figure;
+% figure(9)
 % h = scatter(y_val,y_vector,0.1);
 % h.Marker='.';
 % if strcmp(sim_type,'OE')
@@ -582,7 +582,7 @@ end
 %errLearning =(y_vector_poly-y_learning)*(y_vector_poly-y_learning)'
 
 %Compare model for learning data.
-figure;
+figure(22);
 hold on;
 plot(1:length(y_vector_poly),y_vector_poly);
 plot(1:length(y_learning),y_learning);
@@ -593,7 +593,7 @@ legend('y_{learning}','y_{model}','u');
 xlabel('t');
 ylabel('y,u');
 
-figure;
+figure(23);
 h = scatter(y_learning,y_vector_poly,0.1);
 h.Marker='.';
 title('Relacja modelu MNK dla danych ucz¹cych');
@@ -610,7 +610,7 @@ end
 %errValidating =(y_vector_poly-y_val)*(y_vector_poly-y_val)'
 
 %Compare model for validating data.
-figure;
+figure(24);
 hold on;
 plot(1:length(y_vector_poly),y_vector_poly);
 plot(1:length(y_val),y_val);
@@ -621,12 +621,15 @@ legend('y_{val}','y_{model}','u');
 xlabel('t');
 ylabel('y,u');
 
-figure;
+figure(25);
 h = scatter(y_val,y_vector_poly,0.1);
 h.Marker='.';
 title('Relacja modelu MNK dla danych weryfikuj¹cych');
 xlabel('y_{val}');
 ylabel('y_{mod}');
+
+clear;
+load('beforemodels.mat');
 
 clear;
 load('bestmodel.mat');
