@@ -151,12 +151,8 @@ delete('tmp.mat');
 
 %Count response of network for validate data.
 y_vector = zeros(1,length(u_val));
-x_vector = zeros(2,length(u_val));
+y_vector(1:nb) = y_val(1:nb);
 
-%Init state
-x_vector(:,1) = [0;0];
-
-y_vector = val
 for i=(nb)+1:length(u_val)
     if strcmp(sim_type,'OE')
         y_vector(1,i) = w20 + w2*tanh(w10 + w1*[flip(u_val(i-nb:i-tau)) flip(y_vector(i-na:i-1))]');
@@ -192,4 +188,123 @@ err = immse(y_vector,y_val)
 M = zeros(length(y_learning)-nb,nb-tau+na+2);
 for i=(nb+1):length(y_learning)
     M(i-nb,:) = [1 flip(u_learning(i-nb:i-tau)) flip(y_learning(i-na:i-1))];
+end
+
+W =M\y_learning(nb+1:end)';
+
+y_vector_poly = zeros(1,length(u_val));
+y_vector_poly(1:nb) = y_val(1:nb);
+for i=(nb)+1:length(u_val)
+    y_vector_poly(1,i) = W'*[1 flip(u_val(i-nb:i-tau)) flip(y_vector_poly(i-na:i-1))]';
+end
+
+%Compare model for validating data.
+figure(8);
+hold on;
+plot(1:length(y_vector_poly),y_vector_poly);
+plot(1:length(y_val),y_val);
+plot(1:length(u_val),u_val);
+hold off;
+title('Compare for validating data');
+legend('y_{val}','y_{model}','u');
+xlabel('t');
+ylabel('y,u');
+
+figure(9)
+h = scatter(y_val,y_vector_poly,0.1);
+h.Marker='.';
+title('Validating data into model results');
+xlabel('y_{val}');
+ylabel('y_{mod}');
+
+%Count MSE.
+err = immse(y_vector_poly,y_val)
+
+%% Process regulation.
+alg_type = 'NPL'; %NPL, GPC, PID, NO
+
+sim_time = 2000;
+T = 0.1;
+
+lambda = 1;
+N = 10;
+Nu = 1;
+
+K = 10;
+Ti = 10;
+Td = 1;
+
+%Initialization.
+y_vector = zeros(1,sim_time);
+x_vector = zeros(2,sim_time);
+u_vector = zeros(1,sim_time);
+
+switch alg_type
+    case 'NPL'
+    case 'GPC'
+    case 'PID'
+        e_vector = zeros(1,sim_time);
+        r2 = K*Td/T;
+        r1 = K*(T/(2*Ti)-2*Td/T-1);
+        r0 = K*(1+T/(2*Ti)+Td/T);
+    case 'NO'
+end
+
+%Init state
+x_vector(:,1) = [0;0];
+y_zad_vector = ones(1,sim_time)*0.5;
+%Main simulation loop.
+for k=nb:sim_time
+    
+    %Object simulation.
+    x_vector(1,k+1) = -alfa1 * x_vector(1,k) + x_vector(2,k) + beta1*g1(u_vector(1,k-u_delay));
+    x_vector(2,k+1) = -alfa2 * x_vector(1,k) + beta2*g1(u_vector(1,k-u_delay));
+    %y_vector(1,k) = g2(x_vector(1,j)); %without noise
+    y_vector(1,k) = g2(x_vector(1,k)) + 0.02*(rand(1,1)-0.5); % with noise
+
+    %Count control signal.
+    switch alg_type
+        case 'NPL'
+        %Create linearization point vector.
+        x = [flip(u_vector(k-nb:k-tau)) flip(y_vector(k-na:k-1))]';
+        
+        %Count linearization coefficients.
+        [a,b] = networkLinearization(w10, w1, w20, w2, na, nb, tau, x0, 'tan_h');
+        
+        %Count step response.
+        s = zeros(N,1);
+        for j=1:N
+           for i=1:min(j,nb)
+               s(j) = s(j) + b(i);
+           end
+           for i=1:min(j-1,na)
+               s(j) = s(j) + a(i)*s(j-i);
+           end
+        end
+        
+        %Construct dynamic matrix.
+        M = zeros(N,Nu);
+        for j=1: Nu
+           M(:,j) = [zeros(j-1,1) s(1:N-j+1)]'; 
+        end
+        
+        K = (M' * M + lambda * diag(N))^(-1) * M';
+        
+        %Construct free trajectory.
+        dk = y_vector(1,k) - w20 + w2*tanh(w10 + w1*[flip(u_val(i-nb:i-tau)) flip(y_vector(i-na:i-1))]');
+        
+        y0 = ones(N,1)*dk;
+        
+        for j=1:N
+            y0(k) = 
+        end
+        
+        u = K*(y_zad*ones(Nu,1) - y0);
+        case 'GPC'
+        case 'PID'
+            e_vector(k) = y_zad(k) - y_vector(k);
+            u_vector(k) = r2*e_vector(k-2)+r1*e_vector(k-1)+r0*e_vector(k) + u_vector(k-1);_
+        case 'NO'
+    end
+
 end
