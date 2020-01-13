@@ -632,7 +632,7 @@ ylabel('y_{mod}');
 err = immse(y_vector_poly,y_val)
 
 %% Process regulation.
-alg_type = 'NO'; %NPL, GPC, PID, NO
+alg_type = 'PID'; %NPL, GPC, PID, NO
 [tau, nb, na, K, max_iter, error, algorithm] = readConfig();
 load('bestmodel');
 
@@ -641,8 +641,8 @@ sim_time = 500;
 T = 0.1;
 
 lambda = 1;
-N = 6;
-Nu = 2;
+N = 20;
+Nu = 5;
 
 K = 1.8;
 Ti = 12*T;
@@ -707,7 +707,7 @@ switch alg_type
         r0 = K*(1+T/(2*Ti)+Td/T);
     case 'NO'
         u_start = zeros(Nu,1);
-        options = optimoptions('fmincon','Algorithm','sqp','StepTolerance',1e-12);
+        options = optimoptions('fmincon','display','off');
 end
 
 %Init state
@@ -758,8 +758,9 @@ for k=nb+1:sim_time
             y = w20 + w2*tanh(w10 + w1*[flip(u_vector(k-nb:k-tau)) flip(y_vector(k-na:k-1))]');
             dk = y_vector(1,k) - y;
 
-            y0 = [y_vector(1:k-1) y zeros(1,sim_time+N-k)];
-            u0 = [u_vector(1:k-1) zeros(1,sim_time+N-k+1)];
+            %y0 = [y_vector(1:k-1) y];
+            y0 = [y_vector(1:k)];
+            u0 = [u_vector(1:k-1)];
         	traj_fun = @(u) trajectoryFunction(u, y0, u0, k, N, Nu, dk, y_zad, lambda,w20,w2,w10,w1,na,nb,tau);
             
     	case {'NPL', 'GPC'}
@@ -768,7 +769,7 @@ for k=nb+1:sim_time
             dk = y_vector(1,k) - y;
 
             y0 = [y_vector(1:k-1) y ones(1,sim_time+N-k)*dk];
-            u0 = [u_vector(1:k-1) ones(1,sim_time+Nu-k+1)*u_vector(k-1)];
+            u0 = [u_vector(1:k-1) ones(1,sim_time+N-k+1)*u_vector(k-1)];
             for j=1:N
                 y0(k+j) = y0(k+j) + w20 + w2*tanh(w10 + w1*[flip(u0(k-nb+j:k-tau+j)) flip(y0(k-na+j:k-1+j))]');
             end
@@ -798,7 +799,7 @@ for k=nb+1:sim_time
                 u_vector(k) = u_max;
             end
         case 'NO'
-            u_start = fmincon(traj_fun,u_start,[],[],[],[],u_min*ones(1,Nu),u_max*ones(1,Nu), [], options);
+            u_start = fmincon(traj_fun,u_vector(k-1)*ones(Nu,1),[],[],[],[],u_min*ones(1,Nu),u_max*ones(1,Nu), [], options);
             u_vector(k) = u_start(1);
     end
 end
