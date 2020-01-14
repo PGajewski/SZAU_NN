@@ -632,7 +632,7 @@ ylabel('y_{mod}');
 err = immse(y_vector_poly,y_val)
 
 %% Process regulation.
-alg_type = 'NO'; %NPL, GPC, PID, NO
+alg_type = 'GPC'; %NPL, GPC, PID, NO
 lin_type = 'Num'; %Anal, Num
 [tau, nb, na, K, max_iter, error, algorithm] = readConfig();
 load('bestmodel');
@@ -717,6 +717,7 @@ end
 
 %Init state
 x_vector(:,1) = [0;0];
+
 %Main simulation loop.
 for k=nb+1:sim_time
     k
@@ -726,7 +727,7 @@ for k=nb+1:sim_time
     y_vector(1,k) = g2(x_vector(1,k)); %without noise
     %y_vector(1,k) = g2(x_vector(1,k)) + 0.02*(rand(1,1)-0.5); % with noise
     %y_vector(1,k) = w20 + w2*tanh(w10 + w1*[flip(u_vector(k-nb:k-tau)) flip(y_vector(k-na:k-1))]');
-
+    tic
     %Preprocesing
     switch alg_type
         case 'NPL'
@@ -810,6 +811,7 @@ for k=nb+1:sim_time
             u_start = fmincon(traj_fun,u_vector(k-1)*ones(Nu,1),[],[],[],[],u_min*ones(1,Nu),u_max*ones(1,Nu), [], options);
             u_vector(k) = u_start(1);
     end
+    toc
 end
 
 figure;
