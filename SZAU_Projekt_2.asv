@@ -632,7 +632,7 @@ ylabel('y_{mod}');
 err = immse(y_vector_poly,y_val)
 
 %% Process regulation.
-alg_type = 'NO'; %NPL, GPC, PID, NO
+alg_type = 'PID'; %NPL, GPC, PID, NO
 lin_type = 'Num'; %Anal, Num
 [tau, nb, na, K, max_iter, error, algorithm] = readConfig();
 load('bestmodel');
@@ -828,32 +828,20 @@ stairs(1:sim_time,u_vector);
 title(sprintf('Dzia³anie uk³adu z regulatorem typu %s', alg_type));
 legend('u');
 xlabel('k');
-ylabel('u');
-
-%% Init collecting data.
-figure(99);
-title('Dzia³anie uk³adu z ró¿nymi regulatorami');
-stairs(1:sim_time,y_zad);
-legend('y_{zad}');
-xlabel('k');
 ylabel('y');
 
-figure(98);
-title('Dzia³anie uk³adu z ró¿nymi regulatorami');
-stairs(1:sim_time,y_zad);
-legend('y_{zad}');
-xlabel('k');
-ylabel('u,y');
+%% Init collecting data.
+figure(99)
 
 %% Collect data
 figure(99);
 hold on;
-stairs(1:sim_time,y_vector,'DisplayName',alg_type);
+stairs(1:sim_time,y_vector);
 hold off;
 
 figure(98);
 hold on;
-stairs(1:sim_time,u_vector,'DisplayName',alg_type);
+stairs(1:sim_time,u_vector);
 hold off;
 
 
